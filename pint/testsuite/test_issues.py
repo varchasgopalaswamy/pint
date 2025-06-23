@@ -70,29 +70,6 @@ class TestIssues(QuantityTestCase):
         np.testing.assert_array_equal(qq.magnitude, x * m)
         assert qq.units == module_registry.meter.units
 
-    @pytest.mark.xfail
-    @helpers.requires_numpy
-    def test_issue39(self, module_registry):
-        x = np.matrix([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        q = module_registry.meter * x
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-        q = x * module_registry.meter
-        assert isinstance(q, module_registry.Quantity)
-        np.testing.assert_array_equal(q.magnitude, x)
-        assert q.units == module_registry.meter.units
-
-        m = np.matrix(2 * np.ones(3, 3))
-        qq = q * m
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-        qq = m * q
-        assert isinstance(qq, module_registry.Quantity)
-        np.testing.assert_array_equal(qq.magnitude, x * m)
-        assert qq.units == module_registry.meter.units
-
     @helpers.requires_numpy
     def test_issue44(self, module_registry):
         x = 4.0 * module_registry.dimensionless
@@ -400,13 +377,22 @@ class TestIssues(QuantityTestCase):
         module_registry.Quantity(2, "Å")
 
     def test_alternative_angstrom_definition(self, module_registry):
-        module_registry.Quantity(2, "\u212B")
+        module_registry.Quantity(2, "\u212b")
 
     def test_micro_creation_U03bc(self, module_registry):
         module_registry.Quantity(2, "μm")
 
     def test_micro_creation_U00b5(self, module_registry):
         module_registry.Quantity(2, "µm")
+
+    def test_micro_creation_mu(self, module_registry):
+        module_registry.Quantity(2, "mug")
+
+    def test_micro_creation_mc(self, module_registry):
+        module_registry.Quantity(2, "mcg")
+
+    def test_liter_creation_U2113(self, module_registry):
+        module_registry.Quantity(2, "ℓ")
 
     @helpers.requires_numpy
     def test_issue171_real_imag(self, module_registry):
@@ -884,6 +870,24 @@ class TestIssues(QuantityTestCase):
         assert c.to("percent").m == 50
         # assert c.to("%").m == 50  # TODO: fails.
 
+    def test_issue1963(self, module_registry):
+        ureg = module_registry
+        assert ureg("‰") == ureg("permille")
+        assert ureg("‰") == ureg.permille
+
+        a = ureg.Quantity("10 ‰")
+        b = ureg.Quantity("100 ppm")
+        c = ureg.Quantity("0.5")
+
+        assert f"{a}" == "10 permille"
+        assert f"{a:~}" == "10 ‰"
+
+        assert_equal(a, 0.01)
+        assert_equal(1e2 * b, a)
+        assert_equal(c, 50 * a)
+
+        assert_equal((1 * ureg.milligram) / (1 * ureg.gram), 1 * ureg.permille)
+
     @pytest.mark.xfail
     @helpers.requires_uncertainties()
     def test_issue_1300(self):
@@ -922,6 +926,7 @@ class TestIssues(QuantityTestCase):
         assert q2.format_babel("~", locale="es_ES") == "3,1 W/cm"
         assert q2.format_babel("", locale="es_ES") == "3,1 vatios por centímetro"
 
+    @helpers.requires_numpy()
     @helpers.requires_uncertainties()
     def test_issue1611(self, module_registry):
         from numpy.testing import assert_almost_equal
@@ -1202,7 +1207,7 @@ def test_issue_1845():
 def test_issues_1841(func_registry, units, spec, expected):
     ur = func_registry
     ur.formatter.default_sort_func = sort_by_dimensionality
-    ur.default_format = spec
+    ur.formatter.default_format = spec
     value = ur.Unit(UnitsContainer(**units))
     assert f"{value}" == expected
 
@@ -1214,7 +1219,7 @@ def test_issues_1841_xfail():
 
     # sets compact display mode by default
     ur = UnitRegistry()
-    ur.default_format = "~P"
+    ur.formatter.default_format = "~P"
     ur.formatter.default_sort_func = sort_by_dimensionality
 
     q = ur.Quantity("2*pi radian * hour")
@@ -1269,7 +1274,6 @@ def test_issue2017():
 
     @fmt.register_unit_format("test")
     def _test_format(unit, registry, **options):
-        print("format called")
         proc = {u.replace("µ", "u"): e for u, e in unit.items()}
         return fmt.formatter(
             proc.items(),
@@ -1303,3 +1307,21 @@ def test_issue2007():
     assert f"{q:~C}" == "1"
     assert f"{q:~D}" == "1"
     assert f"{q:~H}" == "1"
+
+
+@helpers.requires_uncertainties()
+@helpers.requires_numpy()
+def test_issue2044():
+    from numpy.testing import assert_almost_equal
+    from uncertainties import ufloat
+
+    ureg = UnitRegistry()
+    # First make sure this doesn't fail completely (A Measurement)
+    q = ureg.Quantity(10_000, "m").plus_minus(0.01).to_compact()
+    assert_almost_equal(q.m.n, 10.0)
+    assert q.u == "kilometer"
+
+    # Similarly, for a Ufloat with units
+    q = (ufloat(10_000, 0.01) * ureg.m).to_compact()
+    assert_almost_equal(q.m.n, 10.0)
+    assert q.u == "kilometer"
