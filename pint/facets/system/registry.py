@@ -1,15 +1,15 @@
 """
-    pint.facets.systems.registry
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.facets.systems.registry
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Generic
 
 from ... import errors
 from ...compat import TypeAlias
@@ -258,8 +258,6 @@ class GenericSystemRegistry(
             raise ex
 
 
-class SystemRegistry(
-    GenericSystemRegistry[objects.SystemQuantity[Any], objects.SystemUnit]
-):
-    Quantity: TypeAlias = objects.SystemQuantity[Any]
+class SystemRegistry(GenericSystemRegistry[objects.SystemQuantity, objects.SystemUnit]):
+    Quantity: TypeAlias = objects.SystemQuantity
     Unit: TypeAlias = objects.SystemUnit

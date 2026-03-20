@@ -1,9 +1,9 @@
 """
-    pint.delegates.formatter.base_formatter
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Common class and function for all formatters.
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+pint.delegates.formatter.base_formatter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Common class and function for all formatters.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -88,11 +88,13 @@ def register_unit_format(name: str):
                 uspec: str = "",
                 **babel_kwds: Unpack[BabelKwds],
             ) -> str:
+                if "as_ratio" in babel_kwds.keys():
+                    babel_kwds.pop("as_ratio")
                 numerator, _denominator = prepare_compount_unit(
                     unit,
                     uspec,
                     **babel_kwds,
-                    as_ratio=False,
+                    as_ratio=False,  # required to get _denominator empty
                     registry=self._registry,
                 )
 

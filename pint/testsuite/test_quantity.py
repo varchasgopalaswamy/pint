@@ -60,6 +60,8 @@ class TestQuantity(QuantityTestCase):
             assert 4.2 * self.ureg.meter == self.Q_(4.2, 2 * self.ureg.meter)
         assert len(caplog.records) == 1
 
+        assert self.Q_("4.2×10⁻¹² ft/s") == self.Q_(4.2e-12, "foot/second")
+
     def test_round(self):
         x = self.Q_(1.1, "kg")
         assert isinstance(round(x).magnitude, int)
@@ -382,7 +384,7 @@ class TestQuantity(QuantityTestCase):
             round(abs(self.Q_("2 second").to("millisecond").magnitude - 2000), 7) == 0
         )
 
-    @helpers.requires_mip
+    @helpers.requires_scipy
     def test_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -420,7 +422,7 @@ class TestQuantity(QuantityTestCase):
         result = Q_("1 volt").to_preferred(preferred_units)
         assert result.units == ureg.volts
 
-    @helpers.requires_mip
+    @helpers.requires_scipy
     def test_to_preferred_registry(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -435,7 +437,7 @@ class TestQuantity(QuantityTestCase):
         pressure = (Q_(1, "N") * Q_("1 m**-2")).to_preferred()
         assert pressure.units == ureg.Pa
 
-    @helpers.requires_mip
+    @helpers.requires_scipy
     def test_autoconvert_to_preferred(self):
         ureg = self.ureg
         Q_ = self.Q_
@@ -450,6 +452,25 @@ class TestQuantity(QuantityTestCase):
         ]
         pressure = Q_(1, "N") * Q_("1 m**-2")
         assert pressure.units == ureg.Pa
+
+    params = [
+        ("mks", "1 mm^2/MW", "m^2/W"),
+        ("mks", "1 Mg", "kg"),
+        ("mks", "1 ton", "ton"),
+        ("mks", "1 mS / cm", "S / m"),
+        ("cgs", "1 mm^2/MW", "cm^2/W"),
+        ("cgs", "1 Mg", "g"),
+        ("cgs", "1 ton", "ton"),
+        ("cgs", "1 mS / cm", "S / cm"),
+    ]
+
+    @pytest.mark.parametrize(("sys", "input_string", "expected"), params)
+    def test_to_unprefixed(self, sys, input_string, expected):
+        ureg = UnitRegistry(system=sys)
+        Q_ = ureg.Quantity
+
+        result = Q_(input_string).to_unprefixed()
+        assert result.units == ureg.Unit(expected)
 
     @helpers.requires_numpy
     def test_convert_numpy(self):
@@ -513,6 +534,7 @@ class TestQuantity(QuantityTestCase):
     def test_both_symbol(self):
         assert self.Q_(2, "ms") == self.Q_(2, "millisecond")
         assert self.Q_(2, "cm") == self.Q_(2, "centimeter")
+        assert self.Q_(2, "mm / s ** 2") == self.Q_(2, "millimeter_per_second_squared")
 
     def test_dimensionless_units(self):
         assert (
@@ -2027,3 +2049,10 @@ class TestCompareNeutral(QuantityTestCase):
         assert isinstance(quantity.m, float)
 
         assert isinstance(self.ureg.m, self.ureg.Unit)
+
+
+class TestGenericQuantityTyping:
+    def test_generic_type_use(self):
+        from pint import Quantity
+
+        _ = Quantity[int]

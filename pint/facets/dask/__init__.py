@@ -1,18 +1,17 @@
 """
-    pint.facets.dask
-    ~~~~~~~~~~~~~~~~
+pint.facets.dask
+~~~~~~~~~~~~~~~~
 
-    Adds pint the capability to interoperate with Dask
+Adds pint the capability to interoperate with Dask
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
-
 
 from __future__ import annotations
 
 import functools
-from typing import Any, Generic
+from typing import Generic
 
 from ...compat import TypeAlias, compute, dask_array, persist, visualize
 from ..plain import (
@@ -137,6 +136,6 @@ class GenericDaskRegistry(
     pass
 
 
-class DaskRegistry(GenericDaskRegistry[DaskQuantity[Any], DaskUnit]):
-    Quantity: TypeAlias = DaskQuantity[Any]
+class DaskRegistry(GenericDaskRegistry[DaskQuantity, DaskUnit]):
+    Quantity: TypeAlias = DaskQuantity
     Unit: TypeAlias = DaskUnit

@@ -1,12 +1,12 @@
 """
-    pint.delegates.formatter.html
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pint.delegates.formatter.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Implements:
-    - HTML: suitable for web/jupyter notebook outputs.
+Implements:
+- HTML: suitable for web/jupyter notebook outputs.
 
-    :copyright: 2022 by Pint Authors, see AUTHORS for more details.
-    :license: BSD, see LICENSE for more details.
+:copyright: 2022 by Pint Authors, see AUTHORS for more details.
+:license: BSD, see LICENSE for more details.
 """
 
 from __future__ import annotations
@@ -106,10 +106,13 @@ class HTMLFormatter(BaseFormatter):
         else:
             division_fmt = "{}/{}"
 
+        as_ratio = babel_kwds.get("as_ratio", True)
+        assert isinstance(as_ratio, bool)
+
         return formatter(
             numerator,
             denominator,
-            as_ratio=True,
+            as_ratio=as_ratio,
             single_denominator=True,
             product_fmt=r" ",
             division_fmt=division_fmt,
